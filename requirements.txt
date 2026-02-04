@@ -1,4 +1,5 @@
-streamlit
-openai
+streamlit==1.53.1
+openai==2.16.0
+fpdf2==2.8.5
 gspread
-oauth2client
+oauth2client==4.1.3

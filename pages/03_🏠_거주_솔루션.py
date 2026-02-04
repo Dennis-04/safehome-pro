@@ -47,27 +47,41 @@ def generate_text(prompt_type, details):
     return response.choices[0].message.content
 
 # --------------------------------------------------------------------------
-# [함수 2] PDF 내용증명 생성 (한글 폰트 필수)
+# [함수 2] PDF 내용증명 생성 (경로 문제 완벽 해결 버전)
 # --------------------------------------------------------------------------
 def create_legal_pdf(sender, receiver, address, title, content):
     pdf = FPDF()
     pdf.add_page()
     
-    # 폰트 설정 (나눔고딕)
-    font_path = "NanumGothic.ttf"
+    # 1. 폰트 파일 위치 찾기 (절대 경로 탐색)
+    # 현재 파일(03...py)의 위치를 기준으로 상위 폴더(루트)를 찾습니다.
+    current_file_path = os.path.abspath(__file__) # 현재 파일 경로
+    pages_dir = os.path.dirname(current_file_path) # pages 폴더
+    root_dir = os.path.dirname(pages_dir) # safehome-pro 폴더 (루트)
+    
+    # 루트 폴더에 있는 NanumGothic.ttf를 가리킴
+    font_path = os.path.join(root_dir, "NanumGothic.ttf")
+
+    # 2. 폰트 적용
     if os.path.exists(font_path):
         pdf.add_font('NanumGothic', '', font_path, uni=True)
         pdf.set_font('NanumGothic', '', 12)
     else:
-        st.error("폰트 파일(NanumGothic.ttf)이 없습니다. 기본 폰트로 대체됩니다(한글 깨짐 주의).")
-        pdf.set_font('Arial', '', 12)
+        # 혹시 몰라 pages 폴더 안도 찾아봄
+        font_path_backup = os.path.join(pages_dir, "NanumGothic.ttf")
+        if os.path.exists(font_path_backup):
+            pdf.add_font('NanumGothic', '', font_path_backup, uni=True)
+            pdf.set_font('NanumGothic', '', 12)
+        else:
+            st.error(f"🚨 폰트 파일을 찾을 수 없습니다! (예상 경로: {font_path})")
+            return None # 강제 종료 (영어 폰트로 진행하면 어차피 터짐)
 
-    # 제목
+    # 3. 문서 작성 (제목)
     pdf.set_font_size(24)
     pdf.cell(0, 20, "내 용 증 명 서", 0, 1, 'C')
     pdf.ln(10)
     
-    # 발신인/수신인 정보
+    # (발신인/수신인 정보)
     pdf.set_font_size(12)
     pdf.cell(0, 10, f"수 신 인: {receiver}", 0, 1)
     pdf.cell(0, 10, f"주 소: {address} (임대차 목적물)", 0, 1)
@@ -75,17 +89,17 @@ def create_legal_pdf(sender, receiver, address, title, content):
     pdf.cell(0, 10, f"발 신 인: {sender}", 0, 1)
     pdf.ln(10)
     
-    # 제목
+    # (제목)
     pdf.set_font_size(14)
     pdf.cell(0, 10, f"제 목: {title}", 0, 1, 'L')
     pdf.line(10, pdf.get_y(), 200, pdf.get_y()) # 밑줄
     pdf.ln(10)
     
-    # 본문
+    # (본문)
     pdf.set_font_size(11)
     pdf.multi_cell(0, 8, content)
     
-    # 날짜 및 서명
+    # (날짜 및 서명)
     pdf.ln(20)
     pdf.cell(0, 10, datetime.now().strftime("%Y년 %m월 %d일"), 0, 1, 'C')
     pdf.cell(0, 10, f"발신인 {sender} (인)", 0, 1, 'C')
@@ -165,16 +179,18 @@ if st.session_state.get('generated'):
         st.write("")
         st.text_area("내용증명 본문 미리보기", value=st.session_state['legal_res'], height=300)
         
-        # PDF 다운로드 버튼
+        # PDF 다운로드 버튼 (안전 장치 추가)
         if sender_name and receiver_name and address_info:
             pdf_bytes = create_legal_pdf(sender_name, receiver_name, address_info, f"{issue_type} 관련의 건", st.session_state['legal_res'])
             
-            st.download_button(
-                label="📄 내용증명 PDF 다운로드 (제출용)",
-                data=pdf_bytes,
-                file_name="내용증명서.pdf",
-                mime="application/pdf",
-                type="primary"
-            )
+            # pdf_bytes가 정상적으로 만들어졌을 때만 버튼 표시
+            if pdf_bytes:
+                st.download_button(
+                    label="📄 내용증명 PDF 다운로드 (제출용)",
+                    data=pdf_bytes,
+                    file_name="내용증명서.pdf",
+                    mime="application/pdf",
+                    type="primary"
+                )rm NanumGothic.ttf
         else:
             st.warning("👈 왼쪽의 '기본 정보'를 모두 입력해야 PDF를 다운로드할 수 있습니다.")
