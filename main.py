@@ -1,87 +1,144 @@
 import streamlit as st
+from PIL import Image
 
 # --------------------------------------------------------------------------
-# [설정] 페이지 기본 설정
+# [설정] 페이지 기본 설정 & 3D HUD 스타일 (CSS Magic)
 # --------------------------------------------------------------------------
 st.set_page_config(
-    page_title="SafeHome - 전세 지킴이",
-    page_icon="🏠",
-    layout="centered"
+    page_title="SafeHome 3D - Command Center",
+    page_icon="🛡️",
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
 # --------------------------------------------------------------------------
-# [스타일] CSS로 예쁘게 꾸미기
+# [스타일] CSS: 로봇 배경 + 글래스모피즘 HUD
 # --------------------------------------------------------------------------
 st.markdown("""
 <style>
+    /* 1. 전체 배경 및 폰트 */
+    .stApp { 
+        font-family: 'Pretendard', sans-serif; 
+        background: transparent !important; 
+    }
+    
+    /* Spline 3D 배경 (전체 화면 고정) */
+    #spline-bg {
+        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 0; border: none;
+    }
+    
+    /* 컨텐츠 영역 (배경 위에 뜸) */
+    .block-container {
+        position: relative; z-index: 1; padding-top: 5vh; max-width: 1200px;
+    }
+
+    /* 2. 타이틀 스타일 (네온 효과) */
     .main-title {
-        font-size: 3rem;
+        font-size: 60px;
         font-weight: 800;
-        color: #191f28;
+        color: white;
+        text-align: center;
+        text-shadow: 0 0 20px rgba(56, 189, 248, 0.8);
         margin-bottom: 10px;
+        letter-spacing: 2px;
     }
     .sub-title {
-        font-size: 1.2rem;
-        color: #8b95a1;
-        margin-bottom: 40px;
-    }
-    .service-card {
-        background-color: #f9fafb;
-        padding: 20px;
-        border-radius: 15px;
-        border: 1px solid #e5e8eb;
+        font-size: 20px;
+        color: #94a3b8;
         text-align: center;
-        margin-bottom: 10px;
-        transition: 0.3s;
+        margin-bottom: 50px;
+        font-weight: 300;
     }
-    .service-card:hover {
-        background-color: #f2f4f6;
-        border-color: #3182f6;
+
+    /* 3. 기능 카드 (Glassmorphism) */
+    .feature-card {
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        padding: 30px;
+        text-align: center;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        height: 280px; /* 높이 고정 */
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+    .feature-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 10px 40px rgba(56, 189, 248, 0.3);
+        border-color: rgba(56, 189, 248, 0.5);
+    }
+    
+    .card-icon { font-size: 50px; margin-bottom: 15px; }
+    .card-title { font-size: 22px; font-weight: bold; color: white; margin-bottom: 10px; }
+    .card-desc { font-size: 14px; color: #cbd5e1; line-height: 1.6; }
+
+    /* 사이드바 스타일 보정 */
+    [data-testid="stSidebar"] {
+        background-color: rgba(15, 23, 42, 0.9);
+        border-right: 1px solid rgba(255,255,255,0.1);
     }
 </style>
+
+<iframe id="spline-bg" src='https://my.spline.design/r4xbot-x144J8ISm6Am5vnam9xXxwah/' frameborder='0'></iframe>
 """, unsafe_allow_html=True)
 
 # --------------------------------------------------------------------------
-# [메인] 헤더 섹션
+# [UI] 메인 컨텐츠
 # --------------------------------------------------------------------------
-st.markdown('<div class="main-title">🏠 SafeHome</div>', unsafe_allow_html=True)
-st.markdown('<div class="sub-title">내 보증금, 계약부터 퇴거까지 안전하게 지키세요.</div>', unsafe_allow_html=True)
+
+# 1. 헤더 섹션
+st.markdown('<div class="main-title">SAFEHOME AI</div>', unsafe_allow_html=True)
+st.markdown('<div class="sub-title">"당신의 보증금을 지키는 가장 강력한 인공지능 방어 시스템"</div>', unsafe_allow_html=True)
 
 st.divider()
 
-# --------------------------------------------------------------------------
-# [메뉴] 서비스 선택 (페이지 이동)
-# --------------------------------------------------------------------------
-st.subheader("어떤 도움이 필요하신가요?")
-st.write("") # 여백
+# 2. 3개 기능 카드 섹션 (HTML/CSS로 구현하여 시각적 통일감 부여)
+col1, col2, col3 = st.columns(3)
 
-col1, col2 = st.columns(2)
-
-# 왼쪽 카드: AI 계약 상담 (기존에 만드신 챗봇 페이지)
 with col1:
-    st.info("🤖 계약 전이신가요?")
-    st.markdown("**등기부등본/계약서 AI 분석**")
-    st.caption("위험한 특약이나 권리 관계를 3초 만에 파악합니다.")
-    
-    # [주의] 파일명이 다르면 아래 "pages/..." 부분을 수정해야 합니다.
-    st.page_link("pages/01_📄_계약서_분석.py", label="AI 상담 시작하기", icon="🚀", use_container_width=True)
+    st.markdown("""
+    <div class="feature-card">
+        <div class="card-icon">📄</div>
+        <div class="card-title">계약서 AI 정밀 분석</div>
+        <div class="card-desc">
+            법률 전문 LLM이 독소 조항을 탐지하고<br>
+            수정 제안을 제시합니다.<br>
+            <span style="color:#38bdf8; font-size:12px;">(왼쪽 메뉴 '계약서 분석' 클릭)</span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
-# 오른쪽 카드: 입주 기록 (어제 만든 타임캡슐 페이지)
 with col2:
-    st.success("📸 이미 입주하셨나요?")
-    st.markdown("**입주 전 상태 증거 남기기**")
-    st.caption("방 사진을 찍어두면 2년 뒤 원상복구 분쟁을 막아줍니다.")
-    
-    # [주의] 어제 만든 파일명과 정확히 일치해야 합니다.
-    st.page_link("pages/02_📸_입주_기록.py", label="증거 기록하기", icon="📸", use_container_width=True)
+    st.markdown("""
+    <div class="feature-card">
+        <div class="card-icon">📸</div>
+        <div class="card-title">입주 기록 타임캡슐</div>
+        <div class="card-desc">
+            로봇 스캐너가 방 상태를 기록하고<br>
+            위변조 불가능한 리포트를 생성합니다.<br>
+            <span style="color:#38bdf8; font-size:12px;">(왼쪽 메뉴 '입주 체크리스트' 클릭)</span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
-# --------------------------------------------------------------------------
-# [하단] 안심 문구
-# --------------------------------------------------------------------------
-st.markdown("---")
-st.markdown("""
-<div style="text-align: center; color: #8b95a1; font-size: 0.8rem;">
-    SafeHome은 여러분의 안전한 주거 생활을 응원합니다.<br>
-    © 2026 SafeHome Team. All rights reserved.
-</div>
-""", unsafe_allow_html=True)
+with col3:
+    st.markdown("""
+    <div class="feature-card">
+        <div class="card-icon">🏠</div>
+        <div class="card-title">거주 법률 솔루션</div>
+        <div class="card-desc">
+            누수, 소음, 수리 분쟁 발생 시<br>
+            내용증명 작성 및 대응법을 안내합니다.<br>
+            <span style="color:#38bdf8; font-size:12px;">(왼쪽 메뉴 '거주 솔루션' 클릭)</span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+st.markdown("<br><br>", unsafe_allow_html=True)
+
+# 3. 하단 시스템 상태 메시지
+st.info("💡 **System Status:** All Systems Operational. Ready for Input.")
